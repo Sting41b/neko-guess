@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { requestMotionPermission, type MotionPermission, tryLockLandscape } from '../hooks/useTilt'
 import { useGameAudio } from '../hooks/useGameAudio'
 
@@ -11,6 +11,8 @@ export default function CountdownScreen({ onReady, onBack }: CountdownScreenProp
   const [permission, setPermission] = useState<MotionPermission>('unknown')
   const [count, setCount] = useState<number | null>(null)
   const { initAudio } = useGameAudio()
+  const onReadyRef = useRef(onReady)
+  useEffect(() => { onReadyRef.current = onReady }, [onReady])
 
   // On Android/desktop, auto-grant and start countdown
   useEffect(() => {
@@ -31,12 +33,12 @@ export default function CountdownScreen({ onReady, onBack }: CountdownScreenProp
   useEffect(() => {
     if (count === null) return
     if (count === 0) {
-      const t = setTimeout(onReady, 600)
+      const t = setTimeout(() => onReadyRef.current(), 600)
       return () => clearTimeout(t)
     }
     const t = setTimeout(() => setCount(n => (n ?? 1) - 1), 1000)
     return () => clearTimeout(t)
-  }, [count, onReady])
+  }, [count])  // onReady removed from deps
 
   const handleAllowMotion = useCallback(async () => {
     initAudio() // initialise AudioContext on this gesture (iOS requirement)
