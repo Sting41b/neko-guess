@@ -1,0 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root {
+    height: 100%;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}
+
+@layer components {
+  .game-word {
+    @apply font-fredoka text-6xl sm:text-7xl leading-tight;
+  }
+  .neko-heading {
+    @apply font-fredoka;
+  }
+}
+
+/* Landscape-only lock: show rotate prompt in portrait */
+.portrait-only { display: none; }
+.landscape-content { display: flex; }
+
+@media (orientation: portrait) {
+  .portrait-only { display: flex; }
+  .landscape-content { display: none; }
+}
