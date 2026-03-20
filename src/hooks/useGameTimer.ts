@@ -14,22 +14,21 @@ export function useGameTimer({ seconds, running, onExpire }: UseGameTimerOptions
   // Reset when seconds prop changes (new round)
   useEffect(() => { setTimeLeft(seconds) }, [seconds])
 
+  // Tick down every second while running
   useEffect(() => {
     if (!running) return
-
     const id = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(id)
-          onExpireRef.current()
-          return 0
-        }
-        return prev - 1
-      })
+      setTimeLeft(prev => (prev <= 0 ? 0 : prev - 1))
     }, 1000)
-
     return () => clearInterval(id)
-  }, [running, seconds])
+  }, [running])
+
+  // Fire onExpire when timeLeft hits 0 while running
+  useEffect(() => {
+    if (running && timeLeft === 0) {
+      onExpireRef.current()
+    }
+  }, [running, timeLeft])
 
   return { timeLeft }
 }
