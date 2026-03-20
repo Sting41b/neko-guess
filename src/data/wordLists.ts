@@ -32,7 +32,7 @@ export const categories: Category[] = [
     words: [
       'Pizza', 'Burger', 'Rice', 'Bread', 'Egg', 'Soup', 'Cake',
       'Apple', 'Banana', 'Orange', 'Strawberry', 'Watermelon',
-      'Carrot', 'Tomato', 'Potato', 'Onion', 'Chicken', 'Fish',
+      'Carrot', 'Tomato', 'Potato', 'Onion', 'Steak', 'Shrimp',
       'Milk', 'Coffee', 'Tea', 'Juice', 'Water', 'Ice Cream',
       'Chocolate', 'Cookie', 'Sandwich', 'Salad', 'Pasta', 'Cheese',
       'Butter', 'Yogurt', 'Honey', 'Popcorn', 'Noodles',
@@ -44,11 +44,11 @@ export const categories: Category[] = [
     emoji: '🎭',
     color: 'bg-purple-600',
     words: [
-      'Running', 'Swimming', 'Dancing', 'Sleeping', 'Eating',
+      'Sneezing', 'Yawning', 'Stretching', 'Sleeping', 'Eating',
       'Drinking', 'Reading', 'Writing', 'Cooking', 'Driving',
       'Singing', 'Laughing', 'Crying', 'Jumping', 'Walking',
-      'Climbing', 'Fishing', 'Painting', 'Playing', 'Waiting',
-      'Watching', 'Listening', 'Talking', 'Thinking', 'Waving',
+      'Waving', 'Fishing', 'Painting', 'Playing', 'Waiting',
+      'Watching', 'Listening', 'Talking', 'Thinking', 'Hiding',
       'Brushing Teeth', 'Washing Hands', 'Taking a Photo', 'Opening a Door', 'Riding a Bike',
       'Kicking a Ball', 'Throwing', 'Catching', 'Knocking', 'Clapping',
     ],

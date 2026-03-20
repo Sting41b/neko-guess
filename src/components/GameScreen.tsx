@@ -11,8 +11,12 @@ interface GameScreenProps {
 }
 
 function shuffleAll(): string[] {
-  const all = categories.flatMap(c => c.words)
-  return [...all].sort(() => Math.random() - 0.5)
+  const arr = categories.flatMap(c => c.words)
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]]
+  }
+  return arr
 }
 
 export default function GameScreen({ timerSeconds, onComplete }: GameScreenProps) {
@@ -23,14 +27,19 @@ export default function GameScreen({ timerSeconds, onComplete }: GameScreenProps
   const [frozen, setFrozen] = useState(false)
 
   const feedbackTimeout = useRef<number | null>(null)
+  const expireTimeout = useRef<number | null>(null)
   const { playCorrect, playPass, playTimeUp, playTick } = useGameAudio()
   const resultsRef = useRef(results)
   useEffect(() => { resultsRef.current = results }, [results])
 
   const handleExpire = useCallback(() => {
+    if (feedbackTimeout.current) {
+      clearTimeout(feedbackTimeout.current)
+      feedbackTimeout.current = null
+    }
     playTimeUp()
     setFrozen(true)
-    setTimeout(() => onComplete(resultsRef.current), 1000)
+    expireTimeout.current = window.setTimeout(() => onComplete(resultsRef.current), 1000)
   }, [playTimeUp, onComplete])
 
   const { timeLeft } = useGameTimer({
@@ -44,8 +53,16 @@ export default function GameScreen({ timerSeconds, onComplete }: GameScreenProps
   }, [timeLeft, frozen, playTick])
 
   const advance = useCallback(() => {
-    setIndex(i => Math.min(i + 1, words.length - 1))
-  }, [words.length])
+    setIndex(i => {
+      const next = i + 1
+      if (next >= words.length) {
+        // All words exhausted — end the game early
+        setTimeout(() => onComplete(resultsRef.current), 0)
+        return i
+      }
+      return next
+    })
+  }, [words.length, onComplete])
 
   const handleCorrect = useCallback(() => {
     if (feedback || frozen) return
@@ -53,6 +70,7 @@ export default function GameScreen({ timerSeconds, onComplete }: GameScreenProps
     setResults(r => [...r, { word, outcome: 'correct' }])
     setFeedback('correct')
     playCorrect()
+    if (feedbackTimeout.current) clearTimeout(feedbackTimeout.current)
     feedbackTimeout.current = window.setTimeout(() => {
       setFeedback(null)
       advance()
@@ -65,6 +83,7 @@ export default function GameScreen({ timerSeconds, onComplete }: GameScreenProps
     setResults(r => [...r, { word, outcome: 'pass' }])
     setFeedback('pass')
     playPass()
+    if (feedbackTimeout.current) clearTimeout(feedbackTimeout.current)
     feedbackTimeout.current = window.setTimeout(() => {
       setFeedback(null)
       advance()
@@ -75,6 +94,7 @@ export default function GameScreen({ timerSeconds, onComplete }: GameScreenProps
 
   useEffect(() => () => {
     if (feedbackTimeout.current) clearTimeout(feedbackTimeout.current)
+    if (expireTimeout.current) clearTimeout(expireTimeout.current)
   }, [])
 
   const timerPct = timeLeft / timerSeconds

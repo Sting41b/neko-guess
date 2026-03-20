@@ -17,7 +17,7 @@ export default function ResultsScreen({ results, onPlayAgain }: ResultsScreenPro
       {/* Scrollable word list */}
       <div className="flex-1 w-full max-w-lg overflow-y-auto rounded-2xl bg-white/50 p-4 max-h-[40vh]">
         {results.map((r, i) => (
-          <div key={i} className="flex items-center gap-3 py-1 border-b border-brand-blue/10 last:border-0">
+          <div key={`${i}-${r.word}`} className="flex items-center gap-3 py-1 border-b border-brand-blue/10 last:border-0">
             <span className="text-xl">{r.outcome === 'correct' ? '✅' : '⏭'}</span>
             <span className="font-fredoka text-lg text-brand-blue">{r.word}</span>
           </div>

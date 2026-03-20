@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 
 export const useGameAudio = () => {
   const ctxRef = useRef<AudioContext | null>(null)
@@ -13,8 +13,15 @@ export const useGameAudio = () => {
     return ctxRef.current
   }, [])
 
+  useEffect(() => {
+    return () => { ctxRef.current?.close() }
+  }, [])
+
   // Call this on the same user gesture as iOS motion permission
-  const initAudio = useCallback(() => { getCtx() }, [getCtx])
+  const initAudio = useCallback(() => {
+    const ctx = getCtx()
+    if (ctx.state === 'suspended') ctx.resume()
+  }, [getCtx])
 
   const playCorrect = useCallback(() => {
     try {
@@ -28,7 +35,7 @@ export const useGameAudio = () => {
       gain.gain.setValueAtTime(0.4, ctx.currentTime)
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35)
       osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.35)
-    } catch { /* ignore */ }
+    } catch (e) { console.warn('Audio error:', e) }
   }, [getCtx])
 
   const playPass = useCallback(() => {
@@ -43,7 +50,7 @@ export const useGameAudio = () => {
       gain.gain.setValueAtTime(0.3, ctx.currentTime)
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3)
       osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.3)
-    } catch { /* ignore */ }
+    } catch (e) { console.warn('Audio error:', e) }
   }, [getCtx])
 
   const playTimeUp = useCallback(() => {
@@ -59,7 +66,7 @@ export const useGameAudio = () => {
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.18)
         osc.start(ctx.currentTime + delay); osc.stop(ctx.currentTime + delay + 0.2)
       })
-    } catch { /* ignore */ }
+    } catch (e) { console.warn('Audio error:', e) }
   }, [getCtx])
 
   const playTick = useCallback(() => {
@@ -73,7 +80,7 @@ export const useGameAudio = () => {
       gain.gain.setValueAtTime(0.15, ctx.currentTime)
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08)
       osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.1)
-    } catch { /* ignore */ }
+    } catch (e) { console.warn('Audio error:', e) }
   }, [getCtx])
 
   return { initAudio, playCorrect, playPass, playTimeUp, playTick }

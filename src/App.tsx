@@ -48,7 +48,7 @@ function App() {
         {screen === 'results' && (
           <ResultsScreen
             results={results}
-            onPlayAgain={() => setScreen('setup')}
+            onPlayAgain={() => { setResults([]); setScreen('setup') }}
           />
         )}
       </div>

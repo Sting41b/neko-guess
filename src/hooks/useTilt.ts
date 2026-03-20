@@ -25,7 +25,7 @@ export function detectTilt(z: number, waitingForNeutral: boolean): {
   return { action: 'neutral', newWaitingForNeutral: false }
 }
 
-export type MotionPermission = 'unknown' | 'granted' | 'denied'
+export type MotionPermission = 'unknown' | 'pending' | 'granted' | 'denied'
 
 interface UseTiltOptions {
   onCorrect: () => void
@@ -55,6 +55,7 @@ export async function requestMotionPermission(): Promise<MotionPermission> {
 export function useTilt({ onCorrect, onPass, enabled }: UseTiltOptions) {
   const waitingForNeutral = useRef(true)
   const lockedOut = useRef(false)
+  const lockoutTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const onCorrectRef = useRef(onCorrect)
   const onPassRef = useRef(onPass)
 
@@ -87,16 +88,19 @@ export function useTilt({ onCorrect, onPass, enabled }: UseTiltOptions) {
       if (action === 'correct' && !lockedOut.current) {
         lockedOut.current = true
         onCorrectRef.current()
-        setTimeout(() => { lockedOut.current = false }, LOCKOUT_MS)
+        lockoutTimer.current = setTimeout(() => { lockedOut.current = false }, LOCKOUT_MS)
       } else if (action === 'pass' && !lockedOut.current) {
         lockedOut.current = true
         onPassRef.current()
-        setTimeout(() => { lockedOut.current = false }, LOCKOUT_MS)
+        lockoutTimer.current = setTimeout(() => { lockedOut.current = false }, LOCKOUT_MS)
       }
     }
 
     window.addEventListener('devicemotion', handleMotion)
-    return () => window.removeEventListener('devicemotion', handleMotion)
+    return () => {
+      window.removeEventListener('devicemotion', handleMotion)
+      if (lockoutTimer.current !== null) clearTimeout(lockoutTimer.current)
+    }
   }, [enabled])
 }
 
