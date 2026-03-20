@@ -24,6 +24,7 @@ describe('wordLists', () => {
       expect(cat.id).toBeTruthy()
       expect(cat.name).toBeTruthy()
       expect(cat.emoji).toBeTruthy()
+      expect(cat.color).toBeTruthy()
       expect(Array.isArray(cat.words)).toBe(true)
     })
   })
