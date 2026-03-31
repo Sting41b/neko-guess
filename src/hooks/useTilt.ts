@@ -1,25 +1,25 @@
 import { useEffect, useRef } from 'react'
 
-const CORRECT_THRESHOLD = -6.0
-const PASS_THRESHOLD = 6.0
-const NEUTRAL_THRESHOLD = 2.5
+const CORRECT_THRESHOLD = 30   // gamma > 30° = nod down = correct
+const PASS_THRESHOLD = -30     // gamma < -30° = look up = pass
+const NEUTRAL_THRESHOLD = 15   // |gamma| < 15° = neutral zone
 const LOCKOUT_MS = 1000
 
 // Pure function — exported for unit testing
-export function detectTilt(z: number, waitingForNeutral: boolean): {
+export function detectTilt(gamma: number, waitingForNeutral: boolean): {
   action: 'correct' | 'pass' | 'neutral'
   newWaitingForNeutral: boolean
 } {
-  if (Math.abs(z) < NEUTRAL_THRESHOLD) {
+  if (Math.abs(gamma) < NEUTRAL_THRESHOLD) {
     return { action: 'neutral', newWaitingForNeutral: false }
   }
   if (waitingForNeutral) {
     return { action: 'neutral', newWaitingForNeutral: true }
   }
-  if (z < CORRECT_THRESHOLD) {
+  if (gamma > CORRECT_THRESHOLD) {
     return { action: 'correct', newWaitingForNeutral: true }
   }
-  if (z > PASS_THRESHOLD) {
+  if (gamma < PASS_THRESHOLD) {
     return { action: 'pass', newWaitingForNeutral: true }
   }
   return { action: 'neutral', newWaitingForNeutral: false }
@@ -34,15 +34,15 @@ interface UseTiltOptions {
 }
 
 export async function requestMotionPermission(): Promise<MotionPermission> {
-  // iOS requires explicit permission
+  // iOS requires explicit permission for DeviceOrientationEvent
   if (
-    typeof DeviceMotionEvent !== 'undefined' &&
+    typeof DeviceOrientationEvent !== 'undefined' &&
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    typeof (DeviceMotionEvent as any).requestPermission === 'function'
+    typeof (DeviceOrientationEvent as any).requestPermission === 'function'
   ) {
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = await (DeviceMotionEvent as any).requestPermission()
+      const result = await (DeviceOrientationEvent as any).requestPermission()
       return result === 'granted' ? 'granted' : 'denied'
     } catch {
       return 'denied'
@@ -70,19 +70,11 @@ export function useTilt({ onCorrect, onPass, enabled }: UseTiltOptions) {
   useEffect(() => {
     if (!enabled) return
 
-    const handleMotion = (e: DeviceMotionEvent) => {
-      const accel = e.accelerationIncludingGravity
-      if (!accel) return
-      let az = accel.z
-      if (az === null || az === undefined) return
+    const handleOrientation = (e: DeviceOrientationEvent) => {
+      const gamma = e.gamma
+      if (gamma === null || gamma === undefined) return
 
-      // Chrome/Android inverts Z at 270° landscape
-      const angle =
-        screen.orientation?.angle ??
-        (typeof window.orientation === 'number' ? window.orientation : 0)
-      if (angle === 270 || angle === -90) az = -az
-
-      const { action, newWaitingForNeutral } = detectTilt(az, waitingForNeutral.current)
+      const { action, newWaitingForNeutral } = detectTilt(gamma, waitingForNeutral.current)
       waitingForNeutral.current = newWaitingForNeutral
 
       if (action === 'correct' && !lockedOut.current) {
@@ -96,9 +88,9 @@ export function useTilt({ onCorrect, onPass, enabled }: UseTiltOptions) {
       }
     }
 
-    window.addEventListener('devicemotion', handleMotion)
+    window.addEventListener('deviceorientation', handleOrientation)
     return () => {
-      window.removeEventListener('devicemotion', handleMotion)
+      window.removeEventListener('deviceorientation', handleOrientation)
       if (lockoutTimer.current !== null) clearTimeout(lockoutTimer.current)
     }
   }, [enabled])
